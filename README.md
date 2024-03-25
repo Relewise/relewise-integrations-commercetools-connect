@@ -1,22 +1,30 @@
 <p align="center">
-  <a href="https://commercetools.com/">
-    <img alt="commercetools logo" src="https://unpkg.com/@commercetools-frontend/assets/logos/commercetools_primary-logo_horizontal_RGB.png">
-  </a></br>
-  <b>Connect Application Starter in TypeScript</b>
+  <a href="https://relewise.com/">
+    <img alt="Relewise logo" src=".github/banner.png">
+  </a>
 </p>
 
-This is the `starter-typescript` template to develop [connect applications](https://marketplace.commercetools.com/) in TypeScript.
+# Relewise commercetools connect app
 
-## Instructions
+The Relewise connect app commercetools is a Node.js application that provides the ability to sync commercetools data into Relewise.
 
-Use `create-connect-app` cli with `starter-typescript` as `template` value to download this template repository to build the integration application , folder structure needs to be followed to ensure certification & deployment from commercetools connect team as stated [here](https://github.com/commercetools/connect-application-kit#readme) 
+## Deployment configuration
 
-## Architecture principles for building an connect application 
+Here you can see the details about various variables in configuration
 
-* Connector solution should be lightweight in nature
-* Connector solutions should follow test driven development. Unit , Integration (& E2E) tests should be included and successfully passed to be used
-* No hardcoding of customer related config. If needed, values in an environment file which should not be maintained in repository
-* Connector solution should be supported with detailed documentation
-* Connectors should be point to point in nature, currently doesnt support any persistence capabilities apart from in memory persistence
-* Connector solution should use open source technologies, although connector itself can be private for specific customer(s)
-* Code should not contain console.log statements, use [the included logger](https://github.com/commercetools/merchant-center-application-kit/tree/main/packages-backend/loggers#readme) instead.
+- CTP_PROJECT_KEY: The key of commercetools project.
+
+- CTP_CLIENT_ID: The client ID of your commercetools user account. It is used in commercetools client to communicate with commercetools platform via SDK.
+
+- CTP_CLIENT_SECRET: The client secret of commercetools user account. It is used in commercetools client to communicate with commercetools platform via SDK.
+
+- CTP_SCOPE: The scope constrains the endpoints to which the commercetools client has access, as well as the read/write access right to an endpoint.
+
+- CTP_REGION: As the commercetools APIs are provided in six different region, it defines the region which your commercetools user account belongs to.
+
+- RELEWISE_STORE_KEY: The Key for the store to which from the export is going to be performed on.
+- RELEWISE_DATASET_ID: The DatasetId in Relewise.
+- RELEWISE_API_KEY: ApiKey with access to perform Product Updates.
+- RELEWISE_SERVER_URL: The Server URL your dataset is hosted on.
+
+The DatasetId, ApiKey and ServerUrl can be found via https://my.relewise.com - which you need access to, in order to be able to view the products imported into Relewise.
