@@ -22,12 +22,12 @@ export default function mapProduct(product: ProductProjection, unixTimeStamp: nu
             'SearchKeywords': searchKeywordsToMultilingual(product.searchKeywords),
             'InStock': DataValueFactory.boolean(variants.some(variant => variant.availability?.isOnStock))
         })
-        .categoryPaths(b => {
+        .categoryPaths(categoryBuilder => {
             for (const categoryLink of product.categories) {
                 const category = categoriesMap.get(categoryLink.id);
+                
                 if (category) {
-
-                    b.path(p => {
+                    categoryBuilder.path(p => {
                         category.ancestors
                             .forEach(parent => {
                                 const parentCategory = categoriesMap.get(parent.id);
@@ -40,8 +40,6 @@ export default function mapProduct(product: ProductProjection, unixTimeStamp: nu
                     });
                 }
             }
-
-            return b;
         });
 
     mapPriceOnProduct(builder, variants);
