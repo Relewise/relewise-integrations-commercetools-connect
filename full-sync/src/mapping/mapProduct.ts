@@ -5,8 +5,7 @@ import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, searchKeyw
 
 export default function mapProduct(product: ProductProjection, unixTimeStamp: number, categoriesMap: Map<string, Category>) {
 
-    // When there is only a master-variant, then the 'product.variants' is empty
-    const variants = (product.variants.length == 0 ? [product.masterVariant] : product.variants);
+    const variants = [product.masterVariant].concat(product.variants);
     
     const builder = new ProductUpdateBuilder({
         id: product.key ?? product.id,
