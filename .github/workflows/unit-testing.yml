@@ -6,7 +6,7 @@ env:
   node-version: '20'
 
 jobs:
-  test-sdk:
+  build-test:
     runs-on: ubuntu-latest
     defaults:
       run:
