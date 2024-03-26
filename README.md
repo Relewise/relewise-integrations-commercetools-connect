@@ -28,3 +28,18 @@ Here you can see the details about various variables in configuration. You need 
 - RELEWISE_SERVER_URL: The Server URL your dataset is hosted on.
 
 The DatasetId, ApiKey and ServerUrl can be found via https://my.relewise.com - which you need access to, in order to be able to view the products imported into Relewise.
+
+## Support & contact
+
+If you run into any issues with the integration, please feel free to reach out. There are multiple ways of reaching us. Check out [here](https://docs.relewise.com/docs/developer/support.html) for more information.
+
+## Contributing
+
+Pull requests are always welcome.  
+Please fork this repository and make a PR when you are ready with your contribution.  
+
+Otherwise you are welcome to open an Issue in our [issue tracker](https://github.com/Relewise/relewise-integrations-commercetools-connect/issues).
+
+## License
+
+relewise-integrations-commercetools-connect is licensed under the [MIT license](./LICENSE)
