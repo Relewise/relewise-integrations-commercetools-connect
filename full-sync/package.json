@@ -1,5 +1,5 @@
 {
-  "name": "service-typescript",
+  "name": "full-sync",
   "description": "",
   "version": "1.0.0",
   "main": "index.js",
@@ -16,7 +16,7 @@
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
   },
-  "author": "",
+  "author": "Relewise",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",

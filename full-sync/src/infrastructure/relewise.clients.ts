@@ -3,6 +3,7 @@ import { readConfiguration } from './utils/config.utils';
 
 export function createIntegrator() {
     const configuration = readConfiguration().relewise;
+    
     return new Integrator(
         configuration.datasetId,
         configuration.apiKey,
