@@ -1,5 +1,5 @@
 import { ProductProjection, ProductReference, Category } from '@commercetools/platform-sdk';
-import { getProductsInCurrentStore, getProductProjectionInStoreById, getCategories } from '../client/query.client';
+import { getProductsInCurrentStore, getProductProjectionInStoreById } from '../client/query.client.products';
 import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
 import CustomError from '../infrastructure/errors/custom.error';
 import { logger } from '../infrastructure/utils/logger.utils';
@@ -7,6 +7,7 @@ import { Trackable, DataValueFactory } from '@relewise/client';
 import { ProductAdministrativeActionBuilder } from '@relewise/integrations';
 import { createIntegrator } from '../infrastructure/relewise.clients';
 import mapProduct from '../mapping/mapProduct';
+import { getCategories } from '../client/query.client.categories';
 
 export default async function syncProducts(storeKey: string) {
 
@@ -67,7 +68,7 @@ export async function saveProducts({ products, categories }: { products: Product
     updates.push(new ProductAdministrativeActionBuilder({
         filters: (f) => f.addProductDataFilter('ImportedAt', c => c.addEqualsCondition(DataValueFactory.number(unixTimeStamp), /* negated: */ true)),
         productUpdateKind: 'Disable',
-    }).build())
+    }).build());
 
     const integrator = createIntegrator();
     integrator.batch(updates);
