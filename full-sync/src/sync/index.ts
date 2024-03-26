@@ -11,25 +11,24 @@ import { getCategories } from '../client/query.client.categories';
 
 export default async function syncProducts(storeKey: string) {
 
-    let productsToBeSynced: ProductProjection[] = [];
+    const productsToBeSynced: ProductProjection[] = [];
     const products: ProductReference[] = await getProductsInCurrentStore(storeKey);
 
     for (const productInCurrentStore of products) {
         const productToBeSynced = await getProductProjectionInStoreById(
             storeKey,
-            productInCurrentStore.id
-        );
+            productInCurrentStore.id);
 
         //Check if product ID has already been existing in the list
         if (productToBeSynced) {
-            const isDuplicatedProduct =
-                productsToBeSynced.filter(
-                    (product) => product.id === productToBeSynced.id
-                ).length > 0;
-            if (isDuplicatedProduct)
+            const isDuplicatedProduct = productsToBeSynced.some((product) => product.id === productToBeSynced.id);
+
+            if (isDuplicatedProduct) {
                 logger.info(`${productToBeSynced.id} is duplicated.`);
-            if (!isDuplicatedProduct)
-                productsToBeSynced = productsToBeSynced.concat(productToBeSynced);
+            }
+            else {
+                productsToBeSynced.push(productToBeSynced);
+            }
         }
     }
 
