@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Relewise commercetools connect app
+# Relewise commercetools connect integration
 
 The Relewise commercetools connect integration provides a default way of synchronizing your product catalog from commercetools to Relewise in order to use our product discoverability features.
 
