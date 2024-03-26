@@ -10,6 +10,8 @@ export default function mapProduct(product: ProductProjection, unixTimeStamp: nu
     const builder = new ProductUpdateBuilder({
         id: product.key ?? product.id,
         productUpdateKind: 'ReplaceProvidedProperties',
+        variantUpdateKind: 'ReplaceProvidedProperties',
+        replaceExistingVariants: true
     })
         .variants(mapVariants(variants, product))
         .displayName(localizedToLanguageLookUp(product.name))
@@ -68,6 +70,7 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
             return builder.build();
         });
 }
+
 function mapPriceOnProduct(builder: ProductUpdateBuilder, variants: CTProductVariant[]) {
     const lowestListPrice = Object.entries(groupBy(
         variants.flatMap(v => v.prices?.map(p => ({ amount: p.value.centAmount / 100, currency: p.value.currencyCode })) ?? []),
