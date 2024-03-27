@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
-import { localizedToLanguageLookUp, localizedToMultilingual } from '../../src/mapping/helpers';
+import { localizedToLanguageLookUp, localizedToMultilingual, searchKeywordsToMultilingual } from '../../src/mapping/helpers';
 import { DataValueFactory } from '@relewise/client';
+import { SearchKeywords } from '@commercetools/platform-sdk';
 
 describe('Testing helpers', () => {
     test('localizedToMultilingual null value', () => {
@@ -58,5 +59,26 @@ describe('Testing helpers', () => {
                 value: "test2"
             }
         ]);
+    });
+
+    test('searchKeywordsToMultilingual 2 languages', () => {
+
+        const subject: SearchKeywords = {
+            "en": [{ text: "test" }],
+            "da": [{ text: "test2" }],
+        }
+
+        const result = searchKeywordsToMultilingual(subject);
+
+        expect(result).toStrictEqual(DataValueFactory.multilingualCollection([
+            {
+                language: "en",
+                values: ["test"]
+            },
+            {
+                language: "da",
+                values: ["test2"]
+            }
+        ]));
     });
 });
