@@ -1,0 +1,50 @@
+@BEARER_TOKEN = '';
+
+### Deployment documentation: https://docs.commercetools.com/connect/getting-started#deploy-a-connector
+
+### Create draft deployment
+
+POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "key": "relewise-connector",
+  "name": "Relewise",
+  "description": "",
+  "creator": {
+    "email": "hello@relewise.com",
+    "company": "Relewise"
+  },
+  "repository": {
+    "url": "https://github.com/Relewise/relewise-integrations-commercetools-connect.git",
+    "tag": "1.0.0"
+  }
+}
+
+### Request a ConnectorStaged for previewable
+POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts/key=relewise-connector
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "version" : 1,
+  "actions" : [ {
+    "action" : "updatePreviewable"
+  } ]
+}
+
+### Submit a ConnectorStaged for certification
+POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts/key=relewise-connector
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "version": 1,
+  "actions": [
+    {
+      "action": "publish",
+      "certification": true
+    }
+  ]
+}

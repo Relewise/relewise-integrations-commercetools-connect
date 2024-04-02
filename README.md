@@ -8,7 +8,8 @@
 
 The Relewise commercetools connect integration provides a default way of synchronizing your product catalog from commercetools to Relewise in order to use our product discoverability features.
 
-The integration contains a job, that is scheluded to run once per hour and sync the catalog to Relewise.
+The commercetools connect integration serves as a robust bridge between the commercetools platform and Relewise, facilitating seamless synchronization of product data. This integration streamlines the process of managing products across both platforms, ensuring consistency and accuracy in product information while minimizing manual efforts.
+The integration automates the synchronization process, ensuring that product data is regularly updated and consistent across both commercetools and Relewise platforms. This eliminates the need for manual data entry and reduces the risk of errors.
 
 ## Deployment configuration
 

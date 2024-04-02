@@ -8,3 +8,4 @@ coverage
 .vscode
 build/
 .env
+http-client.env.json

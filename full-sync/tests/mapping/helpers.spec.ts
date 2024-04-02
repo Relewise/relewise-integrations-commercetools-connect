@@ -11,6 +11,13 @@ describe('Testing helpers', () => {
     });
 
 
+    test('localizedToMultilingual empty value', () => {
+
+        const result = localizedToMultilingual({})
+        expect(result).toBe(null);
+    });
+
+
     test('localizedToMultilingual 1 language', () => {
 
         const result = localizedToMultilingual({
@@ -59,6 +66,15 @@ describe('Testing helpers', () => {
                 value: "test2"
             }
         ]);
+    });
+
+    test('searchKeywordsToMultilingual empty', () => {
+
+        const subject: SearchKeywords = {};
+
+        const result = searchKeywordsToMultilingual(subject);
+
+        expect(result).toStrictEqual(null);
     });
 
     test('searchKeywordsToMultilingual 2 languages', () => {
