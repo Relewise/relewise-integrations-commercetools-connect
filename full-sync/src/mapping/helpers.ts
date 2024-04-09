@@ -7,7 +7,7 @@ export function localizedToMultilingual(value?: LocalizedString) {
     }
 
     const mapped = localizedToLanguageLookUp(value);
-    if (!mapped) {
+    if (!mapped || mapped.length == 0) {
         return null;
     }
 
@@ -19,7 +19,7 @@ export function localizedToLanguageLookUp(value: LocalizedString) {
     const values = Object.entries(value);
 
     if (values.length === 0) {
-        return null;
+        return [];
     }
 
     return values.map(v => ({ language: v[0], value: v[1] }));
