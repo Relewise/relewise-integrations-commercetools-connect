@@ -30,11 +30,11 @@ deployAs:
           description: commercetools store key for the store to export from commercetools to Relewise
           required: true
         - key: RELEWISE_DATASET_ID
-          description: The Relewise Dataset Id, can by found in My Relewise
+          description: The Relewise Dataset Id
           required: true
         - key: RELEWISE_API_KEY
-          description: The Relewise Dataset API Key, can by found in My Relewise
+          description: The Relewise Dataset API Key
           required: true
         - key: RELEWISE_SERVER_URL
-          description: The Relewise Server URL, can by found in My Relewise
+          description: The Relewise Server URL
           required: true
