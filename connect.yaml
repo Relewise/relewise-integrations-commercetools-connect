@@ -1,6 +1,6 @@
 deployAs:
   - name: full-sync
-    applicationType: service
+    applicationType: job
     endpoint: /full-sync
     properties:
       schedule: "0 * * * *"
