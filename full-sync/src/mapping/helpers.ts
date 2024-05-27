@@ -1,4 +1,4 @@
-import { LocalizedString, SearchKeywords } from '@commercetools/platform-sdk';
+import { LocalizedString, Price, SearchKeywords } from '@commercetools/platform-sdk';
 import { DataValueFactory } from '@relewise/client';
 
 export function localizedToMultilingual(value?: LocalizedString) {
@@ -49,4 +49,11 @@ export function groupBy<T>(list: T[], fN: (item: T) => string): { [key: string]:
         }, {});
 
     return grouped;
+}
+
+export function mapPrice(price: Price, includeDiscount = false) {
+    return {
+        amount: (price.discounted && includeDiscount ? price.discounted.value.centAmount : price.value.centAmount) / 100,
+        currency: `${price.country}-${price.value.currencyCode}`
+    }
 }

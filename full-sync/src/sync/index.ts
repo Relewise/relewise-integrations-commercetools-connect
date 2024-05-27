@@ -46,6 +46,8 @@ export default async function syncProducts(storeKey: string) {
         });
 
         logger.info(`Product(s) has been added/updated to relewise.`);
+    } else {
+        logger.warn(`${productsToBeSynced.length} product(s) found. Make sure you have defined product selections for the store.`);
     }
 }
 

@@ -1,15 +1,25 @@
-@BEARER_TOKEN = '';
-
 ### Deployment documentation: https://docs.commercetools.com/connect/getting-started#deploy-a-connector
+
+### Create a BEARER TOKEN for deployments
+POST 	https://auth.europe-west1.gcp.commercetools.com/oauth/token
+Authorization: {{BASIC_AUTH_TOKEN}} 
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+
+
+### Flow for creating draft and releasing connector app
+
+@BEARER_TOKEN = '';
 
 ### Create draft deployment
 
-POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts
-Authorization: Bearer {{BEARER_TOKEN}}
+POST https://connect.europe-west1.gcp.commercetools.com/connectors/drafts
+Authorization: {{BEARER_TOKEN}}
 Content-Type: application/json
 
 {
-  "key": "relewise-connector",
+  "key": "relewise",
   "name": "Relewise",
   "description": "",
   "creator": {
@@ -18,13 +28,13 @@ Content-Type: application/json
   },
   "repository": {
     "url": "https://github.com/Relewise/relewise-integrations-commercetools-connect.git",
-    "tag": "1.0.0"
+    "tag": "0.0.1"
   }
 }
 
 ### Request a ConnectorStaged for previewable
-POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts/key=relewise-connector
-Authorization: Bearer {{BEARER_TOKEN}}
+POST https://connect.europe-west1.gcp.commercetools.com/connectors/drafts/key=relewise
+Authorization: {{BEARER_TOKEN}}
 Content-Type: application/json
 
 {
@@ -36,7 +46,7 @@ Content-Type: application/json
 
 ### Submit a ConnectorStaged for certification
 POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts/key=relewise-connector
-Authorization: Bearer {{BEARER_TOKEN}}
+Authorization: {{BEARER_TOKEN}}
 Content-Type: application/json
 
 {

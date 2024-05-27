@@ -1,7 +1,7 @@
 import { ProductProjection, Category, ProductVariant as CTProductVariant } from '@commercetools/platform-sdk';
 import { DataValueFactory, ProductVariant } from '@relewise/client';
 import { ProductVariantBuilder, ProductUpdateBuilder } from '@relewise/integrations';
-import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, searchKeywordsToMultilingual } from './helpers';
+import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, mapPrice, searchKeywordsToMultilingual } from './helpers';
 
 export default function mapProduct(product: ProductProjection, unixTimeStamp: number, categoriesMap: Map<string, Category>) {
 
@@ -56,16 +56,11 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
                     'Id': DataValueFactory.number(variant.id),
                     'IsMasterVariant': DataValueFactory.boolean(variant.id == product.masterVariant.id),
                     'Images': variant.images ? DataValueFactory.stringCollection(variant.images.map(x => x.url)) : null,
-                    'InStock': DataValueFactory.boolean(variant.availability?.isOnStock ?? false)
+                    'InStock': DataValueFactory.boolean(variant.availability?.isOnStock ?? false),
+                    'AvailableQuantity': DataValueFactory.number(variant.availability?.availableQuantity ?? 0),
                 })
-                .listPrice(variant.prices?.map(p => ({
-                    amount: p.value.centAmount / 100,
-                    currency: p.value.currencyCode
-                })) ?? [])
-                .salesPrice(variant.prices?.map(p => ({
-                    amount: (p.discounted ? p.discounted.value.centAmount : p.value.centAmount) / 100,
-                    currency: p.value.currencyCode
-                })) ?? []);
+                .listPrice(variant.prices?.map(p => mapPrice(p)) ?? [])
+                .salesPrice(variant.prices?.map(p => mapPrice(p, true)) ?? []);
 
             return builder.build();
         });
@@ -73,13 +68,13 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
 
 function mapPriceOnProduct(builder: ProductUpdateBuilder, variants: CTProductVariant[]) {
     const lowestListPrice = Object.entries(groupBy(
-        variants.flatMap(v => v.prices?.map(p => ({ amount: p.value.centAmount / 100, currency: p.value.currencyCode })) ?? []),
-        (t) => t.currency))
+            variants.flatMap(v => v.prices?.map(p => mapPrice(p)) ?? []),
+            (t) => t.currency))
         .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
 
     const lowestSalesPrice = Object.entries(groupBy(
-        variants.flatMap(v => v.prices?.map(p => ({ amount: (p.discounted ? p.discounted.value.centAmount : p.value.centAmount) / 100, currency: p.value.currencyCode })) ?? []),
-        (t) => t.currency))
+            variants.flatMap(v => v.prices?.map(p => mapPrice(p, true)) ?? []),
+            (t) => t.currency))
         .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
 
     builder.listPrice(lowestListPrice);
