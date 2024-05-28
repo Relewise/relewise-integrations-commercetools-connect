@@ -1,7 +1,7 @@
 import { ProductProjection, Category, ProductVariant as CTProductVariant } from '@commercetools/platform-sdk';
 import { DataValueFactory, ProductVariant } from '@relewise/client';
 import { ProductVariantBuilder, ProductUpdateBuilder } from '@relewise/integrations';
-import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, mapPrice, searchKeywordsToMultilingual } from './helpers';
+import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, mapListPrice, mapSalesPrice, searchKeywordsToMultilingual } from './helpers';
 
 export default function mapProduct(product: ProductProjection, unixTimeStamp: number, categoriesMap: Map<string, Category>) {
 
@@ -59,8 +59,8 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
                     'InStock': DataValueFactory.boolean(variant.availability?.isOnStock ?? false),
                     'AvailableQuantity': DataValueFactory.number(variant.availability?.availableQuantity ?? 0),
                 })
-                .listPrice(variant.prices?.map(p => mapPrice(p)) ?? [])
-                .salesPrice(variant.prices?.map(p => mapPrice(p, true)) ?? []);
+                .listPrice(variant.prices?.map(p => mapListPrice(p)) ?? [])
+                .salesPrice(variant.prices?.map(p => mapSalesPrice(p)) ?? []);
 
             return builder.build();
         });
@@ -68,12 +68,12 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
 
 function mapPriceOnProduct(builder: ProductUpdateBuilder, variants: CTProductVariant[]) {
     const lowestListPrice = Object.entries(groupBy(
-            variants.flatMap(v => v.prices?.map(p => mapPrice(p)) ?? []),
+            variants.flatMap(v => v.prices?.map(p => mapListPrice(p)) ?? []),
             (t) => t.currency))
         .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
 
     const lowestSalesPrice = Object.entries(groupBy(
-            variants.flatMap(v => v.prices?.map(p => mapPrice(p, true)) ?? []),
+            variants.flatMap(v => v.prices?.map(p => mapSalesPrice(p)) ?? []),
             (t) => t.currency))
         .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
 

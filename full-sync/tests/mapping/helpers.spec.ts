@@ -1,7 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
-import { localizedToLanguageLookUp, localizedToMultilingual, searchKeywordsToMultilingual } from '../../src/mapping/helpers';
+import { localizedToLanguageLookUp, localizedToMultilingual, mapListPrice, mapSalesPrice, searchKeywordsToMultilingual } from '../../src/mapping/helpers';
 import { DataValueFactory } from '@relewise/client';
-import { SearchKeywords } from '@commercetools/platform-sdk';
+import { Price, SearchKeywords } from '@commercetools/platform-sdk';
 
 describe('Testing helpers', () => {
     test('localizedToMultilingual null value', () => {
@@ -96,5 +96,81 @@ describe('Testing helpers', () => {
                 values: ["test2"]
             }
         ]));
+    });
+
+    
+    test('mapSalesPrice', () => {
+
+        const subject: Price = {
+            country: 'dk',
+            id: 'a',
+            value: {
+                centAmount: 10_000,
+                currencyCode: 'DKK',
+                fractionDigits: 2,
+                type: 'centPrecision'
+            }
+        }
+
+        const result = mapSalesPrice(subject);
+
+        expect(result).toStrictEqual(
+            {
+                currency: "dk-DKK",
+                amount: 100
+            });
+    });
+
+    test('mapSalesPrice with discount', () => {
+
+        const subject: Price = {
+            country: 'dk',
+            id: 'a',
+            discounted: {
+                value: {
+                    centAmount: 5_000,
+                    currencyCode: 'DKK',
+                    fractionDigits: 2,
+                    type: 'centPrecision'
+                },
+                discount: { id: 'b', typeId: 'product-discount' }
+            },
+            value: {
+                centAmount: 10_000,
+                currencyCode: 'DKK',
+                fractionDigits: 2,
+                type: 'centPrecision'
+            }
+        }
+
+        const result = mapSalesPrice(subject);
+
+        expect(result).toStrictEqual(
+            {
+                currency: "dk-DKK",
+                amount: 50
+            });
+    });
+
+    test('mapListPrice', () => {
+
+        const subject: Price = {
+            country: 'dk',
+            id: 'a',
+            value: {
+                centAmount: 10_000,
+                currencyCode: 'DKK',
+                fractionDigits: 2,
+                type: 'centPrecision'
+            }
+        }
+
+        const result = mapListPrice(subject);
+
+        expect(result).toStrictEqual(
+            {
+                currency: "dk-DKK",
+                amount: 100
+            });
     });
 });
