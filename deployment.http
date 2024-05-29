@@ -1,5 +1,7 @@
 ### Deployment documentation: https://docs.commercetools.com/connect/getting-started#deploy-a-connector
 
+### Remember to create a new tag before creating a new release
+
 ### Create a BEARER TOKEN for deployments
 POST 	https://auth.europe-west1.gcp.commercetools.com/oauth/token
 Authorization: {{BASIC_AUTH_TOKEN}} 
@@ -28,7 +30,7 @@ Content-Type: application/json
   },
   "repository": {
     "url": "https://github.com/Relewise/relewise-integrations-commercetools-connect.git",
-    "tag": "0.0.1"
+    "tag": "0.0.2"
   }
 }
 
