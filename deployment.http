@@ -21,7 +21,7 @@ Content-Type: application/json
 {
   "key": "relewise",
   "name": "Relewise",
-  "description": "",
+  "description": "Synchronize all products from a commercetools store to Relewise",
   "creator": {
     "email": "hello@relewise.com",
     "company": "Relewise"
