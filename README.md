@@ -25,7 +25,7 @@ Here you can see the details about various variables in configuration. You need 
 ### Relewise integration specific configration
 - RELEWISE_STORE_KEY: The Key for the store to which from the export is going to be performed on.
 - RELEWISE_DATASET_ID: The DatasetId in Relewise.
-- RELEWISE_API_KEY: ApiKey with access to perform Product Updates.
+- RELEWISE_API_KEY: ApiKey with access to perform Product Updates & administrative actions.
 - RELEWISE_SERVER_URL: The Server URL your dataset is hosted on.
 
 The DatasetId, ApiKey and ServerUrl can be found via https://my.relewise.com - which you need access to, in order to be able to view the products imported into Relewise.
