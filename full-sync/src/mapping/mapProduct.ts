@@ -55,7 +55,6 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
                 .data({
                     'Id': DataValueFactory.number(variant.id),
                     'IsMasterVariant': DataValueFactory.boolean(variant.id == product.masterVariant.id),
-                    'Images': null,
                     'ImageUrls': variant.images ? DataValueFactory.stringCollection(variant.images.map(x => x.url)) : null,
                     'InStock': DataValueFactory.boolean(variant.availability?.isOnStock ?? false),
                     'AvailableQuantity': DataValueFactory.number(variant.availability?.availableQuantity ?? 0),
