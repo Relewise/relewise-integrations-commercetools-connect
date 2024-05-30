@@ -67,7 +67,7 @@ export async function saveProducts({ products, categories }: { products: Product
     }).build());
 
     updates.push(new ProductAdministrativeActionBuilder({
-        filters: (f) => f.addProductDataFilter('ImportedAt', c => c.addEqualsCondition(DataValueFactory.number(unixTimeStamp), /* negated: */ true)),
+        filters: (f) => f.addProductDataFilter('ImportedAt', c => c.addEqualsCondition(DataValueFactory.number(unixTimeStamp), /* negated: */ true), undefined, /* filterOutIfKeyNotFound: */ false),
         productUpdateKind: 'Disable',
     }).build());
 
