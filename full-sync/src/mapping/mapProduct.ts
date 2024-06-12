@@ -3,7 +3,7 @@ import { DataValueFactory, ProductVariant } from '@relewise/client';
 import { ProductVariantBuilder, ProductUpdateBuilder } from '@relewise/integrations';
 import { groupBy, localizedToLanguageLookUp, localizedToMultilingual, mapListPrice, mapSalesPrice, searchKeywordsToMultilingual } from './helpers';
 
-export default function mapProduct(product: ProductProjection, unixTimeStamp: number, categoriesMap: Map<string, Category>) {
+export function mapProduct(product: ProductProjection, unixTimeStamp: number, categoriesMap: Map<string, Category>) {
 
     const variants = [product.masterVariant].concat(product.variants);
     
@@ -48,7 +48,7 @@ export default function mapProduct(product: ProductProjection, unixTimeStamp: nu
     return builder.build();
 }
 
-function mapVariants(variants: CTProductVariant[], product: ProductProjection): ProductVariant[] {
+export function mapVariants(variants: CTProductVariant[], product: ProductProjection): ProductVariant[] {
     return variants
         .map(variant => {
             const builder = new ProductVariantBuilder({ id: variant.sku ?? variant.id.toString() })
@@ -66,16 +66,16 @@ function mapVariants(variants: CTProductVariant[], product: ProductProjection): 
         });
 }
 
-function mapPriceOnProduct(builder: ProductUpdateBuilder, variants: CTProductVariant[]) {
+export function mapPriceOnProduct(builder: ProductUpdateBuilder, variants: CTProductVariant[]) {
     const lowestListPrice = Object.entries(groupBy(
             variants.flatMap(v => v.prices?.map(p => mapListPrice(p)) ?? []),
             (t) => t.currency))
-        .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
+        .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort((a, b) => a.amount - b.amount)[0].amount }));
 
     const lowestSalesPrice = Object.entries(groupBy(
             variants.flatMap(v => v.prices?.map(p => mapSalesPrice(p)) ?? []),
             (t) => t.currency))
-        .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort(x => x.amount)[0].amount }));
+        .map(currencyGroup => ({ currency: currencyGroup[0], amount: currencyGroup[1].sort((a, b) => a.amount - b.amount)[0].amount }));
 
     builder.listPrice(lowestListPrice);
     builder.salesPrice(lowestSalesPrice);

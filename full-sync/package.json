@@ -2,8 +2,9 @@
   "name": "full-sync",
   "description": "",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "node build/index.js",
     "gcp-build": "tsc",
@@ -11,7 +12,7 @@
     "build": "rimraf ./build && tsc",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.{js,ts}'",
-    "test": "jest --config jest.config.cjs",
+    "test": "jest --config jest.config.cjs --coverage",
     "test:watch": "jest --watch",
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
@@ -44,6 +45,7 @@
     "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
     "express": "^4.19.1",
+    "supertest": "^6.3.3",
     "validator": "^13.12.0"
   }
 }

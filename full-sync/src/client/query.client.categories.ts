@@ -1,5 +1,5 @@
 import { createApiRoot } from './create.client';
-import CustomError from '../infrastructure/errors/custom.error.js';
+import CustomError from '../infrastructure/errors/custom.error';
 import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
 import { Category } from '@commercetools/platform-sdk';
 

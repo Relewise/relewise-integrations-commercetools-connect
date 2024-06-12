@@ -1,6 +1,5 @@
 import { Router } from 'express';
-
-import { syncHandler } from '../controllers/sync.controller.js';
+import { syncHandler } from '../controllers/sync.controller';
 
 const syncRouter = Router();
 

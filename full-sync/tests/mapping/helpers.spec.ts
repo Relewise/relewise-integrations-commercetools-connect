@@ -68,6 +68,12 @@ describe('Testing helpers', () => {
         ]);
     });
 
+    test('searchKeywordsToMultilingual undefined', () => {
+        const result = searchKeywordsToMultilingual(undefined);
+
+        expect(result).toStrictEqual(null);
+    });
+
     test('searchKeywordsToMultilingual empty', () => {
 
         const subject: SearchKeywords = {};

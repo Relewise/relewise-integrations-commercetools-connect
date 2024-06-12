@@ -3,13 +3,10 @@ import { getProductsInCurrentStore, getProductProjectionInStoreById } from '../c
 import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
 import CustomError from '../infrastructure/errors/custom.error';
 import { logger } from '../infrastructure/utils/logger.utils';
-import { Trackable, DataValueFactory } from '@relewise/client';
-import { ProductAdministrativeActionBuilder } from '@relewise/integrations';
-import { createIntegrator } from '../infrastructure/relewise.clients';
-import mapProduct from '../mapping/mapProduct';
 import { getCategories } from '../client/query.client.categories';
+import { saveProducts } from './saveProducts';
 
-export default async function syncProducts(storeKey: string) {
+export async function syncProducts(storeKey: string) {
 
     const productsToBeSynced: ProductProjection[] = [];
     const products: ProductReference[] = await getProductsInCurrentStore(storeKey);
@@ -49,28 +46,4 @@ export default async function syncProducts(storeKey: string) {
     } else {
         logger.warn(`${productsToBeSynced.length} product(s) found. Make sure you have defined product selections for the store.`);
     }
-}
-
-export async function saveProducts({ products, categories }: { products: ProductProjection[], categories: Category[] }) {
-    const categoriesMap: Map<string, Category> = new Map(categories.map(c => [c.id, c]))
-
-    const unixTimeStamp: number = Date.now();
-    const updates: Trackable[] = [];
-
-    for (const product of products) {
-        updates.push(mapProduct(product, unixTimeStamp, categoriesMap));
-    }
-
-    updates.push(new ProductAdministrativeActionBuilder({
-        filters: (f) => f.addProductDataFilter('ImportedAt', c => c.addEqualsCondition(DataValueFactory.number(unixTimeStamp))),
-        productUpdateKind: 'Enable',
-    }).build());
-
-    updates.push(new ProductAdministrativeActionBuilder({
-        filters: (f) => f.addProductDataFilter('ImportedAt', c => c.addEqualsCondition(DataValueFactory.number(unixTimeStamp), /* negated: */ true), undefined, /* filterOutIfKeyNotFound: */ false),
-        productUpdateKind: 'Disable',
-    }).build());
-
-    const integrator = createIntegrator();
-    integrator.batch(updates);
 }

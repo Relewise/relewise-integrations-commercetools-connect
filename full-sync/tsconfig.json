@@ -1,6 +1,12 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
-  "exclude": ["node_modules", "**/*.spec.ts"],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ],
+  "module": "commonjs",
+  "skipLibCheck": true,
+  "moduleResolution": "node",
   "compilerOptions": {
     "resolveJsonModule": true,
     "outDir": "./build",
