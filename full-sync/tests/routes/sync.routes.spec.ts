@@ -1,8 +1,7 @@
 // @ts-ignore
 import request from 'supertest';
 import server from '../../src/index';
-import CustomError from '../../src/infrastructure/errors/custom.error';
-import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_SUCCESS_NO_CONTENT } from '../../src/infrastructure/constants/http.status';
+import { HTTP_STATUS_SUCCESS_NO_CONTENT } from '../../src/infrastructure/constants/http.status';
 
 jest.mock('../../src/infrastructure/utils/config.utils', () => ({
     readConfiguration: jest.fn(() => ({

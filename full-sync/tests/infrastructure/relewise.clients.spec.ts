@@ -1,8 +1,5 @@
 import { createIntegrator } from '../../src/infrastructure/relewise.clients';
-//import * as configUtils from '../../src/infrastructure/utils/config.utils';
 import { Integrator } from '@relewise/integrations';
-import { readConfiguration } from '../../src/infrastructure/utils/config.utils';
-import CustomError from '../../src/infrastructure/errors/custom.error';
 
 jest.mock('../../src/infrastructure/utils/config.utils', () => ({
     readConfiguration: jest.fn(() => ({

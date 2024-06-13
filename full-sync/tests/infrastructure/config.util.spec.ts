@@ -3,7 +3,6 @@ import { readConfiguration } from '../../src/infrastructure/utils/config.utils';
 
 describe('readConfiguration', () => {
     it('should throw an error with missing config', () => {
-
         const t = () => {
             readConfiguration();
         };
