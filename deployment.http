@@ -1,58 +1,161 @@
-### Deployment documentation: https://docs.commercetools.com/connect/getting-started#deploy-a-connector
+### commercetools Connect release runbook
+### Documentation:
+### https://docs.commercetools.com/connect/getting-started#update-your-connector
+###
+### Run one request at a time. Do not use "Run All".
+### Every update uses optimistic locking. Before each mutation, run the GET request
+### immediately above it and copy the returned version into http-client.env.json.
+###
+### Keep secrets and project-specific values in the ignored http-client.env.json file:
+### BASIC_AUTH_TOKEN                     Base64-encoded clientId:clientSecret
+### BEARER_TOKEN                         OAuth access token returned below
+### PROJECT_KEY                          Primary commercetools Project key
+### RELEWISE_STORE_KEY                   Store to synchronize
+### RELEWISE_DATASET_ID                  Relewise dataset ID
+### RELEWISE_API_KEY                     Relewise API key
+### RELEWISE_SERVER_URL                  Relewise server URL
+### CONNECTOR_VERSION_FOR_TAG_UPDATE     Version returned before setRepository
+### CONNECTOR_VERSION_FOR_PREVIEW        Version returned before updatePreviewable
+### CONNECTOR_VERSION_FOR_DEPLOYMENT     Version accepted for preview deployment
+### CONNECTOR_VERSION_FOR_CERTIFICATION  Version returned before certification
+### PREVIEW_DEPLOYMENT_KEY               Unique key, for example relewise-0-1-0-preview
+### EXISTING_DEPLOYMENT_KEY              Existing installation key, when upgrading one
+### EXISTING_DEPLOYMENT_VERSION          Version returned for that installation
+###
+### The API Client used here needs manage_connectors and manage_connectors_deployments
+### for PROJECT_KEY (or the broader manage_project scope). Preview/deployment requests
+### also need manage_api_clients because connect.yaml asks Connect to generate the
+### runtime API Client.
 
-### Remember to create a new tag before creating a new release
+@CONNECT_REGION = europe-west1.gcp
+@CONNECTOR_KEY = relewise
+@RELEASE_TAG = 0.1.0
+@REPOSITORY_URL = https://github.com/Relewise/relewise-integrations-commercetools-connect.git
 
-### Create a BEARER TOKEN for deployments
-POST 	https://auth.europe-west1.gcp.commercetools.com/oauth/token
-Authorization: {{BASIC_AUTH_TOKEN}} 
+### 1. Create a bearer token
+POST https://auth.{{CONNECT_REGION}}.commercetools.com/oauth/token
+Authorization: Basic {{BASIC_AUTH_TOKEN}}
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=client_credentials
 
+### Copy access_token from the response to BEARER_TOKEN in http-client.env.json.
 
-### Flow for creating draft and releasing connector app
+### 2. Read the existing ConnectorStaged before updating its Git tag
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
 
-@BEARER_TOKEN = '';
+### Copy the returned version to CONNECTOR_VERSION_FOR_TAG_UPDATE.
 
-### Create draft deployment
-
-POST https://connect.europe-west1.gcp.commercetools.com/connectors/drafts
-Authorization: {{BEARER_TOKEN}}
+### 3. Point the existing ConnectorStaged to release 0.1.0
+POST https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
 Content-Type: application/json
 
 {
-  "key": "relewise",
-  "name": "Relewise",
-  "description": "Synchronize all products from a commercetools store to Relewise",
-  "creator": {
-    "email": "hello@relewise.com",
-    "company": "Relewise"
+  "version": {{CONNECTOR_VERSION_FOR_TAG_UPDATE}},
+  "actions": [
+    {
+      "action": "setRepository",
+      "url": "{{REPOSITORY_URL}}",
+      "tag": "{{RELEASE_TAG}}"
+    }
+  ]
+}
+
+### 4. Read the updated ConnectorStaged before requesting preview validation
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Confirm repository.tag is 0.1.0 and copy version to CONNECTOR_VERSION_FOR_PREVIEW.
+
+### 5. Request preview validation
+POST https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "version": {{CONNECTOR_VERSION_FOR_PREVIEW}},
+  "actions": [
+    {
+      "action": "updatePreviewable"
+    }
+  ]
+}
+
+### 6. Monitor preview validation
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Continue only when isPreviewable is true and previewableReport has no errors.
+### Copy the accepted ConnectorStaged version to CONNECTOR_VERSION_FOR_DEPLOYMENT.
+
+### 7. Create a preview deployment
+POST https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "key": "{{PREVIEW_DEPLOYMENT_KEY}}",
+  "type": "preview",
+  "connector": {
+    "key": "{{CONNECTOR_KEY}}",
+    "version": {{CONNECTOR_VERSION_FOR_DEPLOYMENT}},
+    "staged": true
   },
-  "repository": {
-    "url": "https://github.com/Relewise/relewise-integrations-commercetools-connect.git",
-    "tag": "0.0.2"
-  }
+  "region": "{{CONNECT_REGION}}",
+  "configurations": [
+    {
+      "applicationName": "full-sync",
+      "securedConfiguration": [
+        {
+          "key": "RELEWISE_STORE_KEY",
+          "value": "{{RELEWISE_STORE_KEY}}"
+        },
+        {
+          "key": "RELEWISE_DATASET_ID",
+          "value": "{{RELEWISE_DATASET_ID}}"
+        },
+        {
+          "key": "RELEWISE_API_KEY",
+          "value": "{{RELEWISE_API_KEY}}"
+        },
+        {
+          "key": "RELEWISE_SERVER_URL",
+          "value": "{{RELEWISE_SERVER_URL}}"
+        }
+      ]
+    }
+  ]
 }
 
-### Request a ConnectorStaged for previewable
-POST https://connect.europe-west1.gcp.commercetools.com/connectors/drafts/key=relewise
-Authorization: {{BEARER_TOKEN}}
+### 8. Monitor the preview deployment
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments/key={{PREVIEW_DEPLOYMENT_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Continue only when status is Deployed and the build report has no errors.
+### Verify that a full synchronization completes and inspect its application logs.
+
+### 9. Inspect preview application logs
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments/key={{PREVIEW_DEPLOYMENT_KEY}}/logs?applicationName=full-sync
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Marketplace certification
+### Do not continue until the preview sync succeeds and the public documentation is live.
+
+### 10. Read the ConnectorStaged before submitting it for re-certification
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Confirm repository.tag is 0.1.0 and copy version to CONNECTOR_VERSION_FOR_CERTIFICATION.
+
+### 11. Submit the updated ConnectorStaged for Marketplace re-certification
+POST https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
 Content-Type: application/json
 
 {
-  "version" : 1,
-  "actions" : [ {
-    "action" : "updatePreviewable"
-  } ]
-}
-
-### Submit a ConnectorStaged for certification
-POST https://connect.eu-central-1.aws.commercetools.com/connectors/drafts/key=relewise-connector
-Authorization: {{BEARER_TOKEN}}
-Content-Type: application/json
-
-{
-  "version": 1,
+  "version": {{CONNECTOR_VERSION_FOR_CERTIFICATION}},
   "actions": [
     {
       "action": "publish",
@@ -60,3 +163,58 @@ Content-Type: application/json
     }
   ]
 }
+
+### 12. Monitor certification status, publishingReport, and certificationInfo
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/connectors/drafts/key={{CONNECTOR_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Existing installation migration
+### Run this only for a known installation after the updated Connector is published.
+
+### 13. Read the existing installation
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments/key={{EXISTING_DEPLOYMENT_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+
+### Copy the returned version to EXISTING_DEPLOYMENT_VERSION.
+
+### 14. Redeploy the installation with the latest Connector and current configuration
+POST https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments/key={{EXISTING_DEPLOYMENT_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
+Content-Type: application/json
+
+{
+  "version": {{EXISTING_DEPLOYMENT_VERSION}},
+  "actions": [
+    {
+      "action": "redeploy",
+      "updateConnector": true,
+      "configurationValues": [
+        {
+          "applicationName": "full-sync",
+          "securedConfiguration": [
+            {
+              "key": "RELEWISE_STORE_KEY",
+              "value": "{{RELEWISE_STORE_KEY}}"
+            },
+            {
+              "key": "RELEWISE_DATASET_ID",
+              "value": "{{RELEWISE_DATASET_ID}}"
+            },
+            {
+              "key": "RELEWISE_API_KEY",
+              "value": "{{RELEWISE_API_KEY}}"
+            },
+            {
+              "key": "RELEWISE_SERVER_URL",
+              "value": "{{RELEWISE_SERVER_URL}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+### 15. Monitor the upgraded installation
+GET https://connect.{{CONNECT_REGION}}.commercetools.com/{{PROJECT_KEY}}/deployments/key={{EXISTING_DEPLOYMENT_KEY}}
+Authorization: Bearer {{BEARER_TOKEN}}
