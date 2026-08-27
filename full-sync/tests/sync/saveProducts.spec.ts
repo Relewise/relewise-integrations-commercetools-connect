@@ -42,8 +42,9 @@ describe('saveProducts', () => {
     const rejection = Object.assign(new Error('Bad request'), {
       statusCode: 400,
     });
+    const batch = jest.fn().mockRejectedValue(rejection);
     const integrator = {
-      batch: jest.fn().mockRejectedValue(rejection),
+      batch,
     } as never;
 
     await expect(
@@ -54,12 +55,32 @@ describe('saveProducts', () => {
         integrator,
       })
     ).rejects.toThrow('Bad request');
+
+    expect(batch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry permanent errors reported in Relewise problem details', async () => {
+    const rejection = Object.assign(new Error('Unauthorized'), {
+      details: { status: 401 },
+    });
+    const batch = jest.fn().mockRejectedValue(rejection);
+
+    await expect(
+      saveProducts({
+        products: [product],
+        categories,
+        importedAt: 123,
+        integrator: { batch } as never,
+      })
+    ).rejects.toThrow('Unauthorized');
+
+    expect(batch).toHaveBeenCalledTimes(1);
   });
 
   it('retries transient Relewise failures with backoff', async () => {
     jest.useFakeTimers();
     const rejection = Object.assign(new Error('Temporarily unavailable'), {
-      statusCode: 503,
+      details: { status: 503 },
     });
     const batch = jest
       .fn()
