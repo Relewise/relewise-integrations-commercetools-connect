@@ -5,24 +5,7 @@ deployAs:
     properties:
       schedule: "0 * * * *"
     configuration:
-      standardConfiguration:
-        - key: CTP_REGION
-          description: commercetools Composable Commerce API region
-          required: true
-          default: "europe-west1.gcp"
       securedConfiguration:
-        - key: CTP_PROJECT_KEY
-          description: commercetools Composable Commerce project key
-          required: true
-        - key: CTP_CLIENT_ID
-          description: commercetools Composable Commerce client ID
-          required: true
-        - key: CTP_CLIENT_SECRET
-          description: commercetools Composable Commerce client secret
-          required: true
-        - key: CTP_SCOPE
-          description: commercetools Composable Commerce client scope
-          required: true
         - key: RELEWISE_STORE_KEY
           description: commercetools store key for the store to export from commercetools to Relewise
           required: true
@@ -35,3 +18,9 @@ deployAs:
         - key: RELEWISE_SERVER_URL
           description: The Relewise Server URL
           required: true
+inheritAs:
+  apiClient:
+    scopes:
+      - view_products
+      - view_product_selections
+      - view_categories

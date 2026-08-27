@@ -87,23 +87,6 @@ describe('Validators', () => {
     });
   });
 
-  describe('region', () => {
-    it('should validate region', () => {
-      const config = [
-        [['region'], [[(value: any) => value.includes('.'), 'Invalid region']]],
-      ];
-      const messages = getValidateMessages(config, {
-        region: 'invalid-region',
-      });
-      expect(messages).toContain('Invalid region');
-
-      const validMessages = getValidateMessages(config, {
-        region: 'us-central1.gcp',
-      });
-      expect(validMessages).toEqual([]);
-    });
-  });
-
   describe('array', () => {
     it('should validate array elements', () => {
       const config = [
@@ -176,32 +159,37 @@ describe('envValidators', () => {
     );
   });
 
-  it('should validate optional scope with at least 2 characters', () => {
+  it('should require a scope with at least 2 characters', () => {
     const config = envValidators.find((v) => v[0][0] === 'scope');
     const validMessage = getValidateMessages([config], {
       scope: 'valid-scope',
     });
     const invalidMessage = getValidateMessages([config], { scope: 'a' });
+    const missingMessage = getValidateMessages([config], {});
 
     expect(validMessage).toEqual([]);
     expect(invalidMessage).toContainEqual(
       expect.objectContaining({ code: 'InvalidScope' })
     );
+    expect(missingMessage).toContainEqual(
+      expect.objectContaining({ code: 'InvalidScope' })
+    );
   });
 
-  it('should validate region as a valid region', () => {
-    const config = envValidators.find((v) => v[0][0] === 'region');
+  it.each([
+    ['apiUrl', 'InvalidApiUrl'],
+    ['authUrl', 'InvalidAuthUrl'],
+  ])('should validate %s as a valid URL', (field, code) => {
+    const config = envValidators.find((v) => v[0][0] === field);
     const validMessage = getValidateMessages([config], {
-      region: 'us-central1.gcp',
+      [field]: 'https://example.com',
     });
     const invalidMessage = getValidateMessages([config], {
-      region: 'invalid-region',
+      [field]: 'invalid-url',
     });
 
     expect(validMessage).toEqual([]);
-    expect(invalidMessage).toContainEqual(
-      expect.objectContaining({ code: 'InvalidRegion' })
-    );
+    expect(invalidMessage).toContainEqual(expect.objectContaining({ code }));
   });
 
   it('should validate storeKey as a valid string', () => {

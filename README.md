@@ -35,7 +35,7 @@ The final enable/disable actions are skipped when commercetools returns no produ
 ## Requirements
 
 - A commercetools Project with a Store and product selections.
-- commercetools API Client credentials with permission to view products, product selections, and categories.
+- A commercetools API Client for creating the deployment. In addition to the permissions needed to manage Connect deployments, it must have `manage_api_clients:{projectKey}` so Connect can create the connector's API Client. Do not grant `manage_api_clients` to the generated connector client.
 - A Relewise dataset and an API key allowed to perform product updates and administrative actions.
 - Node.js 24 for local development.
 - npm, using the committed lockfile.
@@ -44,26 +44,28 @@ The final enable/disable actions are skipped when commercetools returns no produ
 
 The deployment contract is defined in [`connect.yaml`](./connect.yaml). The job runs hourly by default (`0 * * * *`); a deployment can override the schedule.
 
-### Standard configuration
+Connect automatically creates a least-privilege commercetools API Client for the connector with these scopes:
 
-| Variable     | Description                                               |
-| ------------ | --------------------------------------------------------- |
-| `CTP_REGION` | commercetools API region, for example `europe-west1.gcp`. |
+- `view_products`
+- `view_product_selections`
+- `view_categories`
+
+The Project key is appended to each scope by Connect. The deployment API Client's `manage_api_clients` scope is only used by Connect to create this client and is not inherited by the connector.
 
 ### Secured configuration
 
 | Variable              | Description                                    |
 | --------------------- | ---------------------------------------------- |
-| `CTP_PROJECT_KEY`     | commercetools Project key.                     |
-| `CTP_CLIENT_ID`       | commercetools API Client ID.                   |
-| `CTP_CLIENT_SECRET`   | commercetools API Client secret.               |
-| `CTP_SCOPE`           | OAuth scopes assigned to the API Client.       |
 | `RELEWISE_STORE_KEY`  | Key of the commercetools Store to synchronize. |
 | `RELEWISE_DATASET_ID` | Relewise dataset ID.                           |
 | `RELEWISE_API_KEY`    | Relewise API key.                              |
 | `RELEWISE_SERVER_URL` | Relewise API server URL for the dataset.       |
 
 The Relewise values are available in [My Relewise](https://my.relewise.com). Keep all credentials out of source control and logs.
+
+### Generated commercetools environment
+
+Connect injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY`, and `CTP_SCOPE` into the running job. These values must not also be declared as connector configuration because that conflicts with the inherited API Client contract.
 
 ## Local development
 
@@ -72,9 +74,11 @@ From `full-sync`:
 ```powershell
 npm ci
 Copy-Item .env.example .env
-# Fill in the development values in .env
+# Fill in the local development values in .env
 npm run start:dev
 ```
+
+The automatic API Client environment is only injected into a deployed connector. For local development, create a separate API Client with `view_products`, `view_product_selections`, and `view_categories`, then add its credentials, scope, Project key, API URL, and authentication URL to `.env`. Never commit `.env`.
 
 Trigger the local job with an empty POST request:
 
@@ -102,11 +106,20 @@ Tests mock external services and do not require commercetools or Relewise creden
 
 ## Deployment and releases
 
-commercetools Connect builds the `full-sync` application from the committed `package-lock.json`. The `gcp-build` and `start` package scripts compile and run the application. Deployment lifecycle scripts are intentionally omitted because this connector does not create or remove external commercetools resources during deployment.
+commercetools Connect builds the `full-sync` application from the committed `package-lock.json`. The `gcp-build` and `start` package scripts compile and run the application. Connect creates the connector API Client from `inheritAs.apiClient` in `connect.yaml`, so no custom deployment lifecycle script is required.
 
 Validate changes through a Connect preview or sandbox deployment before production. Publish immutable connector versions using Git tags so deployments can refer to a known source revision and lockfile.
 
 Operationally, monitor job duration, product counts, transient retries, and failures. A failed job is safe to rerun because product updates carry a run timestamp and finalization happens only after all product batches succeed.
+
+### Migrating an existing deployment
+
+Existing deployments that supplied commercetools credentials manually must be updated to the inherited API Client contract:
+
+1. Grant `manage_api_clients:{projectKey}` to the API Client used to update the Connector and deployment.
+2. Publish or preview the updated Connector, then update the deployment with `updateConnector: true`.
+3. Supply only the Relewise secured configuration shown above; the previous `CTP_REGION`, `CTP_PROJECT_KEY`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, and `CTP_SCOPE` inputs are no longer part of the deployment contract.
+4. Verify in a preview or sandbox that the generated client can read categories, products, and product-selection assignments before updating production.
 
 ## Dependency maintenance
 

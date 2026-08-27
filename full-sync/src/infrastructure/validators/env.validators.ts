@@ -1,10 +1,4 @@
-import {
-  optional,
-  standardString,
-  standardKey,
-  region,
-  standardUrl,
-} from './helpers.validators';
+import { standardString, standardKey, standardUrl } from './helpers.validators';
 
 /**
  * Create here your own validators
@@ -36,7 +30,7 @@ const envValidators = [
     referencedBy: 'environmentVariables',
   }),
 
-  optional(standardString)(
+  standardString(
     ['scope'],
     {
       code: 'InvalidScope',
@@ -46,9 +40,15 @@ const envValidators = [
     { min: 2, max: undefined }
   ),
 
-  region(['region'], {
-    code: 'InvalidRegion',
-    message: 'Not a valid region.',
+  standardUrl(['apiUrl'], {
+    code: 'InvalidApiUrl',
+    message: 'API URL should be a valid URL.',
+    referencedBy: 'environmentVariables',
+  }),
+
+  standardUrl(['authUrl'], {
+    code: 'InvalidAuthUrl',
+    message: 'Authentication URL should be a valid URL.',
     referencedBy: 'environmentVariables',
   }),
 
