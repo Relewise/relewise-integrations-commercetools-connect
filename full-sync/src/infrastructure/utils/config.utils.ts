@@ -10,11 +10,12 @@ import { getValidateMessages } from '../validators/helpers.validators';
  */
 export const readConfiguration = () => {
   const envVars = {
+    apiUrl: process.env.CTP_API_URL as string,
+    authUrl: process.env.CTP_AUTH_URL as string,
     clientId: process.env.CTP_CLIENT_ID as string,
     clientSecret: process.env.CTP_CLIENT_SECRET as string,
     projectKey: process.env.CTP_PROJECT_KEY as string,
-    scope: process.env.CTP_SCOPE,
-    region: process.env.CTP_REGION as string,
+    scope: process.env.CTP_SCOPE as string,
 
     storeKey: process.env.RELEWISE_STORE_KEY as string,
     relewise: {
