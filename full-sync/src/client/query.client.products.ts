@@ -1,75 +1,59 @@
-import { createApiRoot } from './create.client';
-import CustomError from '../infrastructure/errors/custom.error';
+import { type ProductReference } from '@commercetools/platform-sdk';
 import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
-import { ProductReference, QueryParam } from '@commercetools/platform-sdk';
+import CustomError from '../infrastructure/errors/custom.error';
+import { createApiRoot } from './create.client';
 
-const CHUNK_SIZE = 100;
+const CHUNK_SIZE = 500;
 
-const productQueryArgs: {
-  where?: string | string[];
-  priceCurrency?: string;
-  priceCountry?: string;
-  priceCustomerGroup?: string;
-  priceChannel?: string;
-  localeProjection?: string | string[];
-  expand?: string | string[];
-  sort?: string | string[];
-  limit?: number;
-  offset?: number;
-  withTotal?: boolean;
-  [key: string]: QueryParam;
-} = {
-  limit: CHUNK_SIZE,
-  withTotal: false,
-  sort: 'product.id asc',
-  expand: ['productSelection', 'taxCategory', 'productType', 'categories[*]'],
-};
-
-export async function getProductProjectionInStoreById(storeKey: string, productId: string) {
-  return await createApiRoot()
-    .inStoreKeyWithStoreKeyValue({
-      storeKey: Buffer.from(storeKey).toString(),
-    })
+export async function getProductProjectionInStoreById(
+  storeKey: string,
+  productId: string
+) {
+  return createApiRoot()
+    .inStoreKeyWithStoreKeyValue({ storeKey })
     .productProjections()
-    .withId({
-      ID: Buffer.from(productId).toString(),
+    .withId({ ID: productId })
+    .get({
+      queryArgs: {
+        expand: ['taxCategory', 'productType', 'categories[*]'],
+      },
     })
-    .get({ queryArgs: productQueryArgs })
     .execute()
     .then((response) => response.body);
 }
 
-export async function getProductsInCurrentStore(storeKey: string) {
-  let lastProductId = undefined;
-  let hasNextQuery = true;
-  let allProducts: ProductReference[] = [];
+export async function* getProductReferenceChunksInCurrentStore(
+  storeKey: string
+): AsyncGenerator<ProductReference[]> {
+  let lastProductId: string | undefined;
 
-  while (hasNextQuery) {
-    if (lastProductId) {
-      productQueryArgs.where = `product(id>"${lastProductId}")`;
-    }
+  do {
+    const queryArgs = {
+      limit: CHUNK_SIZE,
+      withTotal: false,
+      sort: 'product.id asc',
+      ...(lastProductId ? { where: `product(id > "${lastProductId}")` } : {}),
+    };
 
     const productChunk = await createApiRoot()
-      .inStoreKeyWithStoreKeyValue({
-        storeKey: Buffer.from(storeKey).toString(),
-      })
+      .inStoreKeyWithStoreKeyValue({ storeKey })
       .productSelectionAssignments()
-      .get({ queryArgs: productQueryArgs })
+      .get({ queryArgs })
       .execute()
       .then((response) => response.body.results)
       .then((results) => results.map((result) => result.product))
-      .catch((error) => {
+      .catch((error: Error) => {
         throw new CustomError(
           HTTP_STATUS_BAD_REQUEST,
-          `Bad request: ${error.message}`,
-          error
+          `Bad request: ${error.message}`
         );
       });
-    hasNextQuery = productChunk.length == CHUNK_SIZE;
-    if (productChunk.length > 0) {
-      lastProductId = productChunk[productChunk.length - 1].id;
-      allProducts = allProducts.concat(productChunk);
+
+    if (productChunk.length === 0) {
+      return;
     }
-  }
-  return allProducts;
+
+    yield productChunk;
+    lastProductId = productChunk.at(-1)?.id;
+  } while (lastProductId !== undefined);
 }

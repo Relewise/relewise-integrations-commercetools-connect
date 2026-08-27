@@ -21,7 +21,7 @@ export const readConfiguration = () => {
       datasetId: process.env.RELEWISE_DATASET_ID as string,
       apiKey: process.env.RELEWISE_API_KEY as string,
       serverUrl: process.env.RELEWISE_SERVER_URL as string,
-    }
+    },
   };
 
   const validationErrors = getValidateMessages(envValidators, envVars);

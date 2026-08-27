@@ -1,40 +1,40 @@
-import { createApiRoot } from './create.client';
-import CustomError from '../infrastructure/errors/custom.error';
+import { type Category } from '@commercetools/platform-sdk';
 import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
-import { Category } from '@commercetools/platform-sdk';
+import CustomError from '../infrastructure/errors/custom.error';
+import { createApiRoot } from './create.client';
 
-const CHUNK_SIZE = 100;
+const CHUNK_SIZE = 500;
 
-export async function getCategories() {
-  let lastCategoryId = undefined;
-  let hasNextQuery = true;
+export async function getCategories(): Promise<Category[]> {
+  let lastCategoryId: string | undefined;
   let allCategories: Category[] = [];
 
-  const queryArgs: { limit: number; where?: string } = { limit: CHUNK_SIZE };
-  while (hasNextQuery) {
-    if (lastCategoryId) {
-      queryArgs.where = `category(id>"${lastCategoryId}")`;
-    }
-
+  do {
+    const queryArgs = {
+      limit: CHUNK_SIZE,
+      withTotal: false,
+      sort: 'id asc',
+      ...(lastCategoryId ? { where: `id > "${lastCategoryId}"` } : {}),
+    };
     const categoryChunk = await createApiRoot()
       .categories()
       .get({ queryArgs })
       .execute()
       .then((response) => response.body.results)
-      .then((results) => results.map((result) => result))
-      .catch((error) => {
+      .catch((error: Error) => {
         throw new CustomError(
           HTTP_STATUS_BAD_REQUEST,
-          `Bad request: ${error.message}`,
-          error
+          `Bad request: ${error.message}`
         );
       });
 
-    hasNextQuery = categoryChunk.length == CHUNK_SIZE;
-    if (categoryChunk.length > 0) {
-      lastCategoryId = categoryChunk[categoryChunk.length - 1].id;
-      allCategories = allCategories.concat(categoryChunk);
+    if (categoryChunk.length === 0) {
+      break;
     }
-  }
+
+    lastCategoryId = categoryChunk.at(-1)?.id;
+    allCategories = allCategories.concat(categoryChunk);
+  } while (lastCategoryId !== undefined);
+
   return allCategories;
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Upgrade Dependencies"
+  short_description: "Safely refresh connector dependencies"
+  default_prompt: "Use $upgrade-dependencies to upgrade and validate the commercetools connector dependencies with a Trello-linked draft PR."

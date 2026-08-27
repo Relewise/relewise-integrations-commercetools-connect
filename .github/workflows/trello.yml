@@ -1,16 +1,30 @@
 name: Create Trello Card on Issue
+
 on:
   issues:
     types: [opened]
+
+permissions:
+  contents: read
+
 jobs:
-  create_card:
+  create-card:
     runs-on: ubuntu-latest
     steps:
       - name: Create Trello card in Weekly Inbound
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://hub.relewise.com/development/services/create-trello-card'
-          method: 'POST'        
-          username: '${{ secrets.HUB_BASIC_AUTH_USERNAME }}'
-          password: '${{ secrets.HUB_BASIC_AUTH_PASSWORD }}'
-          data: '{"title": "Commercetools Integration: ${{ github.event.issue.title }}", "listId": "6797608aa0eb86a30698134f", "labelIds": ["62547bf8c1f9f669438d8b00"], "description": "A new issue has been created.\n\nIssue URL: ${{ github.event.issue.html_url }}"}'
+        env:
+          HUB_PASSWORD: ${{ secrets.HUB_BASIC_AUTH_PASSWORD }}
+          HUB_USERNAME: ${{ secrets.HUB_BASIC_AUTH_USERNAME }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          payload=$(jq -n \
+            --arg title "Commercetools Integration: $ISSUE_TITLE" \
+            --arg description "A new issue has been created.\n\nIssue URL: $ISSUE_URL" \
+            '{title: $title, listId: "6797608aa0eb86a30698134f", labelIds: ["62547bf8c1f9f669438d8b00"], description: $description}')
+
+          curl --fail-with-body --silent --show-error \
+            --user "$HUB_USERNAME:$HUB_PASSWORD" \
+            --header "Content-Type: application/json" \
+            --data "$payload" \
+            https://hub.relewise.com/development/services/create-trello-card

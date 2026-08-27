@@ -4,9 +4,6 @@ deployAs:
     endpoint: /full-sync
     properties:
       schedule: "0 * * * *"
-    scripts:
-      postDeploy: npm install && npm run build
-      preUndeploy: npm install && npm run build
     configuration:
       standardConfiguration:
         - key: CTP_REGION

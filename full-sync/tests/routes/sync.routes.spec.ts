@@ -1,49 +1,40 @@
-// @ts-ignore
 import request from 'supertest';
-import server from '../../src/index';
+import { createApp } from '../../src/app';
 import { HTTP_STATUS_SUCCESS_NO_CONTENT } from '../../src/infrastructure/constants/http.status';
+import { syncProducts } from '../../src/sync';
 
 jest.mock('../../src/infrastructure/utils/config.utils', () => ({
-    readConfiguration: jest.fn(() => ({
-        
-        relewise: {
-            datasetId: 'test-dataset',
-            apiKey: 'test-api-key',
-            serverUrl: 'https://test-server.com',
-        },
-        storeKey: "test-key"
-    }))
+  readConfiguration: jest.fn(() => ({ storeKey: 'test-key' })),
 }));
 
-jest.mock('../../src/client/query.client.categories', () => ({
-    getCategories: jest.fn(() => [])
-}));
-jest.mock('../../src/client/query.client.products', () => ({
-    getProductProjectionInStoreById: jest.fn(() => {}),
-    getProductsInCurrentStore: jest.fn(() => [])
+jest.mock('../../src/sync', () => ({
+  syncProducts: jest.fn(),
 }));
 
+describe('sync route', () => {
+  const app = createApp();
+  const syncProductsMock = jest.mocked(syncProducts);
 
-describe('syncRouter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
+  it('waits for a successful sync before returning no content', async () => {
+    syncProductsMock.mockResolvedValue();
 
-    it('should call syncHandler when POST request is made to /', async () => {
-        const subject = jest.fn((req, res) => res.sendStatus(200));
-        jest.mock('../../src/sync', () => ({
-            syncProducts: () => subject(null, null),
-        }));
+    const response = await request(app).post('/full-sync');
 
+    expect(response.statusCode).toBe(HTTP_STATUS_SUCCESS_NO_CONTENT);
+    expect(syncProductsMock).toHaveBeenCalledWith('test-key');
+  });
 
-        let response = {};
-        // Send request to the connector application with following code snippet.
-        response = await (request(server) as any).post(`/full-sync`);
+  it('returns a sanitized error when synchronization fails', async () => {
+    syncProductsMock.mockRejectedValue(new Error('secret upstream detail'));
 
-        expect(response).toBeDefined();
-        expect((response as any).statusCode).toBe(HTTP_STATUS_SUCCESS_NO_CONTENT);
+    const response = await request(app).post('/full-sync');
 
-        server.close();
-    });
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toEqual({ message: 'Internal server error' });
+    expect(response.text).not.toContain('secret upstream detail');
+  });
 });
