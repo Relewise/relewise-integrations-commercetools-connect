@@ -1,31 +1,63 @@
 name: CI
 
-on: push
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
 
-env:
-  node-version: '20'
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-test:
+    name: Build and test full sync
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: ./full-sync
-    strategy:
-      fail-fast: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - name: Use Node.js ${{ env.node-version }}
-        uses: actions/setup-node@v3
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.node-version }}
+          node-version: 24
+          cache: npm
+          cache-dependency-path: full-sync/package-lock.json
 
-      - run: npm ci
-        name: Install dependencies
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run build
-        name: Build
+      - name: Type-check
+        run: npm run type-check
 
-      - run: npm test
-        name: Unit tests
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify compiled runtime
+        env:
+          CTP_CLIENT_ID: "123456789012345678901234"
+          CTP_CLIENT_SECRET: "12345678901234567890123456789012"
+          CTP_PROJECT_KEY: ci-project
+          CTP_SCOPE: view_products:ci-project
+          CTP_REGION: europe-west1.gcp
+          RELEWISE_STORE_KEY: ci-store
+          RELEWISE_DATASET_ID: ci-dataset
+          RELEWISE_API_KEY: ci-api-key
+          RELEWISE_SERVER_URL: https://api.relewise.com
+        run: node -e "const { createApp } = require('./build/app'); createApp();"
+
+      - name: Unit tests
+        run: npm run test:ci

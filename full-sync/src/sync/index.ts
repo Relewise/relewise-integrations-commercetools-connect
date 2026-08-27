@@ -1,49 +1,76 @@
-import { ProductProjection, ProductReference, Category } from '@commercetools/platform-sdk';
-import { getProductsInCurrentStore, getProductProjectionInStoreById } from '../client/query.client.products';
-import { HTTP_STATUS_BAD_REQUEST } from '../infrastructure/constants/http.status';
-import CustomError from '../infrastructure/errors/custom.error';
-import { logger } from '../infrastructure/utils/logger.utils';
+import { type Category } from '@commercetools/platform-sdk';
 import { getCategories } from '../client/query.client.categories';
-import { saveProducts } from './saveProducts';
+import {
+  getProductProjectionInStoreById,
+  getProductReferenceChunksInCurrentStore,
+} from '../client/query.client.products';
+import { createIntegrator } from '../infrastructure/relewise.clients';
+import { logger } from '../infrastructure/utils/logger.utils';
+import { finalizeProductSync, saveProducts } from './saveProducts';
 
-export async function syncProducts(storeKey: string) {
+const PRODUCT_FETCH_CONCURRENCY = 10;
 
-    const productsToBeSynced: ProductProjection[] = [];
-    const products: ProductReference[] = await getProductsInCurrentStore(storeKey);
+export async function syncProducts(storeKey: string): Promise<void> {
+  const importedAt = Date.now();
+  const categories = new Map<string, Category>(
+    (await getCategories()).map((category) => [category.id, category])
+  );
+  const integrator = createIntegrator();
+  const seenProductIds = new Set<string>();
+  let syncedProductCount = 0;
 
-    for (const productInCurrentStore of products) {
-        const productToBeSynced = await getProductProjectionInStoreById(
-            storeKey,
-            productInCurrentStore.id);
+  for await (const productReferences of getProductReferenceChunksInCurrentStore(
+    storeKey
+  )) {
+    const uniqueReferences = productReferences.filter((product) => {
+      if (seenProductIds.has(product.id)) {
+        return false;
+      }
 
-        //Check if product ID has already been existing in the list
-        if (productToBeSynced) {
-            const isDuplicatedProduct = productsToBeSynced.some((product) => product.id === productToBeSynced.id);
+      seenProductIds.add(product.id);
+      return true;
+    });
 
-            if (isDuplicatedProduct) {
-                logger.info(`${productToBeSynced.id} is duplicated.`);
-            }
-            else {
-                productsToBeSynced.push(productToBeSynced);
-            }
-        }
-    }
+    const products = await mapWithConcurrency(
+      uniqueReferences.map((product) => product.id),
+      PRODUCT_FETCH_CONCURRENCY,
+      (productId) => getProductProjectionInStoreById(storeKey, productId)
+    );
 
-    if (productsToBeSynced.length > 0) {
-        const categories: Category[] = await getCategories();
+    await saveProducts({
+      products,
+      categories,
+      importedAt,
+      integrator,
+    });
+    syncedProductCount += products.length;
+    logger.info(`${syncedProductCount} product(s) synchronized to Relewise.`);
+  }
 
-        logger.info(`${productsToBeSynced.length} product(s) to be synced to relewise.`);
+  if (syncedProductCount === 0) {
+    logger.warn(
+      '0 products found. Make sure product selections are configured for the store.'
+    );
+    return;
+  }
 
-        await saveProducts({ products: productsToBeSynced, categories }).catch((error) => {
-            throw new CustomError(
-                HTTP_STATUS_BAD_REQUEST,
-                `Bad request: ${error.message}`,
-                error
-            );
-        });
+  await finalizeProductSync(importedAt, integrator);
+  logger.info(
+    `Product synchronization completed for ${syncedProductCount} product(s).`
+  );
+}
 
-        logger.info(`Product(s) has been added/updated to relewise.`);
-    } else {
-        logger.warn(`${productsToBeSynced.length} product(s) found. Make sure you have defined product selections for the store.`);
-    }
+async function mapWithConcurrency<TInput, TOutput>(
+  items: TInput[],
+  concurrency: number,
+  map: (item: TInput) => Promise<TOutput>
+): Promise<TOutput[]> {
+  const results: TOutput[] = [];
+
+  for (let index = 0; index < items.length; index += concurrency) {
+    const chunk = items.slice(index, index + concurrency);
+    results.push(...(await Promise.all(chunk.map(map))));
+  }
+
+  return results;
 }

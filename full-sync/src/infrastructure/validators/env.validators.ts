@@ -52,38 +52,26 @@ const envValidators = [
     referencedBy: 'environmentVariables',
   }),
 
-  standardKey(
-    ['storeKey'],
-    {
-      code: 'InvalidStoreKey',
-      message: 'Store key should be a valid string.',
-      referencedBy: 'environmentVariables',
-    }
-  ),
-  standardKey(
-    ['relewise', 'datasetId'],
-    {
-      code: 'InvalidDatasetId',
-      message: 'Dataset Id should be a valid string.',
-      referencedBy: 'environmentVariables',
-    }
-  ),
-  standardString(
-    ['relewise', 'apiKey'],
-    {
-      code: 'InvalidApiKey',
-      message: 'API Key should be a valid string.',
-      referencedBy: 'environmentVariables',
-    }
-  ),
-  standardUrl(
-    ['relewise', 'serverUrl'],
-    {
-      code: 'InvalidServerUrl',
-      message: 'Server Url should be a valid string.',
-      referencedBy: 'environmentVariables',
-    }
-  ),
+  standardKey(['storeKey'], {
+    code: 'InvalidStoreKey',
+    message: 'Store key should be a valid string.',
+    referencedBy: 'environmentVariables',
+  }),
+  standardKey(['relewise', 'datasetId'], {
+    code: 'InvalidDatasetId',
+    message: 'Dataset Id should be a valid string.',
+    referencedBy: 'environmentVariables',
+  }),
+  standardString(['relewise', 'apiKey'], {
+    code: 'InvalidApiKey',
+    message: 'API Key should be a valid string.',
+    referencedBy: 'environmentVariables',
+  }),
+  standardUrl(['relewise', 'serverUrl'], {
+    code: 'InvalidServerUrl',
+    message: 'Server Url should be a valid string.',
+    referencedBy: 'environmentVariables',
+  }),
 ];
 
 export default envValidators;
