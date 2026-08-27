@@ -1,38 +1,6 @@
 version: 2
 
 updates:
-  - package-ecosystem: npm
-    directory: /full-sync
-    schedule:
-      interval: monthly
-      time: "07:00"
-      timezone: Europe/Copenhagen
-    versioning-strategy: increase-if-necessary
-    open-pull-requests-limit: 8
-    groups:
-      commercetools:
-        patterns: ["@commercetools*"]
-        update-types: ["major", "minor", "patch"]
-      relewise:
-        patterns: ["@relewise*"]
-        update-types: ["major", "minor", "patch"]
-      express-stack:
-        patterns: ["express", "@types/express", "supertest", "@types/supertest"]
-        update-types: ["major", "minor", "patch"]
-      jest:
-        patterns: ["jest", "ts-jest", "@types/jest"]
-        update-types: ["major", "minor", "patch"]
-      typescript-eslint:
-        patterns: ["typescript", "eslint", "@eslint/js", "@typescript-eslint/*"]
-        update-types: ["major", "minor", "patch"]
-      remaining-minor-and-patch:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-    labels: ["dependencies"]
-    commit-message:
-      prefix: "deps(connector)"
-      include: scope
-
   - package-ecosystem: github-actions
     directory: /
     schedule:

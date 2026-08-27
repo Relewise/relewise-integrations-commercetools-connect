@@ -110,7 +110,7 @@ Operationally, monitor job duration, product counts, transient retries, and fail
 
 ## Dependency maintenance
 
-Dependabot checks npm and GitHub Actions dependencies monthly. Repository maintainers can use the `upgrade-dependencies` skill in `.agents/skills` for coordinated major upgrades, validation, and the Trello-linked pull request workflow.
+Dependabot checks GitHub Actions dependencies monthly. Repository maintainers use the `upgrade-dependencies` skill in `.agents/skills` for coordinated npm upgrades, validation, and the Trello-linked pull request workflow.
 
 ## Support and contributing
 
